@@ -1,7 +1,10 @@
 import { app, BrowserWindow } from "electron";
 import * as path from "path";
-import electronReload from "electron-reload";
 
+require("electron-reload")(__dirname, {
+  electron: path.join(__dirname, '../node_modules', '.bin', 'electron'),
+  hardResetMethod: 'exit'
+});
 
 function createWindow() {
   // Create the browser window.
