@@ -1,40 +1,49 @@
+
+
 class _Keyboard {
     _keys : Record<string, boolean> = {};
 
     listenForEvents(keys : Array<string>) {
         window.addEventListener('keydown', this._onKeyDown.bind(this));
         window.addEventListener('keyup', this._onKeyUp.bind(this));
-    
-        keys.forEach(function (key: string) {
-            this._keys[key] = false;
-        }.bind(this));
     }
 
     _onKeyDown(event : KeyboardEvent) {
         const key : string = event.key;
-        if (key in this._keys) {
-            event.preventDefault();
-            this._keys[key] = true;
-        }
+        this._keys[key] = true;
     }
     _onKeyUp(event : KeyboardEvent) {
         const key = event.key;
-        if (key in this._keys) {
-            event.preventDefault();
-            this._keys[key] = false;
-        }
+        this._keys[key] = false;
     }
     isDown(key : string) : boolean {
         if(!(key in this._keys)) {
-            throw new Error('Key ' + key + ' is not being listed');
+            return false;
         }
         return this._keys[key];
     }
 }
 
-interface Point{
-    x : number,
-    y : number
+class Point{
+    public x : number = 0
+    public y : number = 0
+    constructor(x : number, y : number){
+        this.x = x;
+        this.y = y;
+    }
+    static add(a : Point, b: Point|Rect) : Point{
+        return new Point(a.x + b.x, a.y + b.y);
+    }
+    static sub(a : Point, b : Point|Rect) : Point{
+        return new Point(a.x - b.x, a.y - b.y)
+    }
+    static mul(a : Point, b : Point) : Point{
+        return new Point(a.x * b.x, a.y * b.y);
+    }
+    static div(a : Point, b : Point) : Point{
+        return new Point(a.x / b.x, a.y / b.y);
+    }
+
 }
 
 class _Mouse {
@@ -99,16 +108,25 @@ enum InputType {
     Gamepad
 }
 
+enum MouseButton{
+    NoButton = 0,
+    Primary = 1,
+    Secondary = 2,
+    Auxiliary = 4,
+    Fourth = 8,
+    Fifth = 16
+}
+
 class _Input {
     //Extends Keyboard, and Mouse API, updated once per frame
     _keys : Record<string, boolean> = {} // reference to Keyboard
     _previous_keys : Record<string, boolean> = {}
 
     _mouse_buttons : Record<number, boolean> = {} // reference to Mouse
-    _previous_mouse_buttons : Record<number, boolean> = {}
+    _previous_mouse_buttons : Record<number, boolean> = {};
     //Action - input
     //TODO: dynamic action adding or something like that
-    _bindings : Record<Action, [InputType, number | string]>
+    _bindings : Record<number, [InputType, number | string]> = {};
 
     constructor(keyboard : _Keyboard, mouse : _Mouse) {
         this._keys = keyboard._keys
@@ -121,6 +139,10 @@ class _Input {
         for (const key in this._mouse_buttons) {
             this._previous_mouse_buttons[key] = false;
         }
+    }
+
+    bind(action : Action, device : InputType, value : number | string){
+        this._bindings[action] = [device, value];
     }
 
     updatePreviousInput(){
@@ -215,18 +237,8 @@ enum Action{
     MoveDown
 }
 
-
-enum TicketType{
-    Player
-}
-
-interface Ticket{
-    level: number
-    type: TicketType
-}
-
 const ChunksSettings = {
-    chunk_size : 16,
+    chunk_size : 8,
     tile_size: 16,
     render_distance: 3 
 }
@@ -311,14 +323,17 @@ const Assets : _Assets = new _Assets();
 //TODO: find solution for chunk ticketing
 class Chunk{
     _cords : [number, number] //chunk coordinate relative from spawn
-    _ticket : Ticket
+    _ticket : Ticket = Ticket.VALID;
     _renderer : HTMLCanvasElement = null
 
+    
     render(){
+        // TODO: make rendering word pos based.?
         if (this._renderer === null){
             this._renderer = document.createElement('canvas');
             this._renderer.width = ChunksSettings.chunk_size * ChunksSettings.tile_size;
             this._renderer.height = ChunksSettings.chunk_size * ChunksSettings.tile_size;
+            this._renderer.getContext("2d").filter = "none";
         }
 
         const context = this._renderer.getContext("2d");
@@ -330,6 +345,10 @@ class Chunk{
         }
         //Renders chunk to it's renderer
         //Chunck is rendered only when it's updated, and in view.
+    }
+
+    tick(){
+        //TODO
     }
 }
 
@@ -412,52 +431,513 @@ class AssetLoader {
 //* there may be a multiple cameras
 //* another feature of camera is to determine mouse world position
 //? basically it's cast of world to screen, and allows to go backward from screen to world.
-//! TODO: while making camera system, determine how world will be stored
 class Camera{
+    //it renders all chunks, and all entities.
+    // but it should provide general API.
+
+    //Position should be anything, any dimension, any other props
+    position : Point
+
+    // First responsibility: detect visible objects...
+}
+
+class Rect{
+    x: number = 0
+    y: number = 0
+    w: number = 0
+    h: number = 0
+
+    static intersect(a : Rect, b : Rect) : boolean {
+        return (
+          a.x <= b.x + b.w &&
+          a.x + a.w >= b.x &&
+          a.y <= b.y + b.h &&
+          a.y + a.h >= b.y
+        )
+    }
+
+    static div(a : Rect, b : number) : Point{
+        let res = new Rect();
+        res.x = a.x / b
+        res.y = a.y / b
+        res.w = a.w / b
+        res.h = a.h / b
+        return res;
+    }
+      
+}
+
+//Camera in 2D world
+class Camera2D{
+    position : Point //center of camera
+    resolution : Point //practically it's resolution
+    size: number // more like a zoom, determines size of camera
+    tile_size : Point // size translated to game grid, pixels per grid
+    _raycast_box : Rect // result of raycast box (x1,y1, x2,y2)
+    world : World
+
+    buffer : any // stores data that is visible.
+    target_renderer : CanvasRenderingContext2D;
+    target : Entity = null
+
+    
+    constructor(world : World){
+        this.position = {x: 0, y: 0};
+        this.resolution = {x: 1920, y: 1080}
+        this.size = 1/4 //1/16; //(0,inf) camera size, the lower it is the bigger zoom is. ex. 1/4 is 4x zoom
+        //raycast of screen over the world position
+        this.tile_size = new Point(ChunksSettings.tile_size / this.size, ChunksSettings.tile_size / this.size)
+        this._raycast_box = {h: 0, w: 0, x: 0, y: 0};
+        this.world = world;
+    }
+
+    //! How it will work
+    // Camera fetches data from world
+    // Camera will know what chunks it needs to render (logical grid), so it will fetch from world
+    //      Possible optimalization here
+    // Camera don't know what entities it needs to render, so it will box-cast all entities
+    //      Again there's a possible optimalization here
+
+    update(){
+        //TODO: update position
+        if(this.target != null){
+            this.position = this.target.position
+        }
+
+        this._raycast_box.x = this.position.x - (this.resolution.x / this.tile_size.x / 2);
+        this._raycast_box.y = this.position.y - (this.resolution.y / this.tile_size.y / 2);
+        this._raycast_box.w = this.resolution.x / this.tile_size.x;
+        this._raycast_box.h = this.resolution.y / this.tile_size.y;
+    }
+
+    set_target(target : Entity){
+        this.target = target
+    }
+
+    // this, works as intented
+    world_to_screen_position(position : Point) : Point{
+        let res : Point
+        res = Point.sub(position, this._raycast_box)
+        res = Point.mul(res, this.tile_size)
+        return res
+    }
+
+    screen_to_world_position(position : Point) : Point{
+        let res : Point
+        res = Point.div(position, this.tile_size)
+        res = Point.add(res, this._raycast_box)
+        res.x = Math.floor(res.x)
+        res.y = Math.floor(res.y)
+        return res
+    }
+
+
+    render_chunks(){
+        //! Q: what represents (0,0) coordinates? Center of world? Is that in middle of chunk, or edge of chunk?
+        //Step 1: Render Chunks
+        let chunk_coords : ChunkCord = {x:0, y:0};
+        
+        let draw_size : Point = {x:0, y:0};
+        draw_size.x = ChunksSettings.chunk_size * this.tile_size.x;        
+        draw_size.y = ChunksSettings.chunk_size * this.tile_size.y;
+
+        let chunk_raycast = Rect.div(this._raycast_box, ChunksSettings.chunk_size);
+
+        //* Fun fact: In JS we can use NOT NOT to get integer from number ~~(a/b)
+        //! What about camera zoom?
+        // NOTE: I'm using floor to get -3 for -2.3
+        chunk_coords.x = Math.floor(chunk_raycast.x);
+        chunk_coords.y = Math.floor(chunk_raycast.y);
+
+        //Next we need to know position of chunk on screen
+        let screen_position : Point = {x: 0, y:0};
+        screen_position.x = (chunk_coords.x - chunk_raycast.x) * draw_size.x;
+        screen_position.y = (chunk_coords.y - chunk_raycast.y) * draw_size.y;
+
+        var chunk : Chunk; //TODO: get chunk & request render
+        while(screen_position.y < this.resolution.y){
+            while(screen_position.x < this.resolution.x){
+                screen_position.x = (chunk_coords.x - chunk_raycast.x) * draw_size.x;
+
+                chunk = this.world.getChunck(chunk_coords);
+                chunk_coords.x += 1;
+                if(chunk === undefined) continue;
+                chunk.render()
+                //todo: reduce renders
+
+                this.target_renderer.drawImage(
+                    chunk._renderer, //image
+                    screen_position.x, screen_position.y, // target (x,y)
+                    draw_size.x, draw_size.y //target (w,h)
+                )
+            }
+            chunk_coords.x = Math.floor(chunk_raycast.x)
+            chunk_coords.y += 1
+
+
+            screen_position.y = (chunk_coords.y - chunk_raycast.y) * draw_size.y;
+            screen_position.x = (chunk_coords.x - chunk_raycast.x) * draw_size.x;
+
+        }
+    }
+
+    render() : void{
+
+        //TODO: remove that clear
+        this.target_renderer.beginPath();
+        this.target_renderer.fillStyle = "#111";
+        this.target_renderer.fillRect(0,0, this.resolution.x, this.resolution.y);
+        this.target_renderer.closePath();
+        
+        this.render_chunks();
+
+        // Step 2: render entities
+        let render_hitbox : Rect = new Rect();
+        for (const key in this.world.entities) {
+            // TODO: find a better way to render player
+            let entity = this.world.entities[key];
+            render_hitbox.x = entity.position.x;
+            render_hitbox.y = entity.position.y;
+            render_hitbox.w = 1;
+            render_hitbox.h = 1;
+
+            if(Rect.intersect(render_hitbox, this._raycast_box)){
+                // ! Assumption: entity position is at render is (x/2, 0) - middle at bottom
+                // TODO: next this thing you need to do
+                //Draw
+                entity.render()
+                let screen_pos = this.world_to_screen_position(entity.position)
+                this.target_renderer.drawImage(entity._renderer, screen_pos.x, screen_pos.y, this.tile_size.x, this.tile_size.y)
+            }
+        }
+
+        // Step 3: HUD, and effects
+        // TODO: simplify math
+        let pos: Point = this.world_to_screen_position(this.screen_to_world_position(Mouse.local_position));
+        this.target_renderer.drawImage(Assets.getImage("select"), pos.x, pos.y, this.tile_size.x, this.tile_size.y)
+
+    }
+}
+
+// Spawn relative chunk coordinates
+interface ChunkCord{
+    x: number //TODO: add integer specifics here!
+    y: number
+}
+
+
+enum Ticket{
+    VALID,
+    OFFLOAD
+};
+
+// A game specific data structure
+// ! How it works:
+// World loosely holds data, it's unordered.
+// In assumption world never have current state, it stores the past state.
+// That's why it needs to simulate current state of world.
+// The resources needs to be offloaded, the chunks and entities will be removed based on algorithm.
+class World{
+    //Later I need to think of better solution, some sort of numeric comparasion
+    chunks : Record<string,Chunk> = {}
+    entities : Record<string, Entity> = {}
+    
+    
+    tick(){
+        //NOTE: during tick update, it's determined whenever object should be unloaded
+        for (const key in this.chunks) {
+            this.chunks[key].tick()
+
+            if (this.chunks[key]._ticket == Ticket.OFFLOAD) {
+                delete this.chunks[key]
+            }
+            //or should I use `for...of`??
+        }
+
+        //TODO: check if for-of isn't a better option
+        for (let id in this.entities) {
+            this.entities[id].tick();
+        }
+
+        //TODO: offload
+    }
+
+    getChunck(cords : ChunkCord) : Chunk{
+        //TODO: create that hash function
+        let hash : string = cords.x.toString() + "@" + cords.y.toString();
+        return this.chunks[hash]
+    }
+}
+
+
+//? What about this idea??
+interface IRenderable{
+    render() : void;
+}
+
+class Time_{
+
+    cycleTime : number = 0 //* int
+    lastTick : number
+
+    delta_time : number;
+    time : number = 0.0;
+
+    fixed_time : number = 0.0;
+    fixed_delta_time : number = 0.1;
+    maximum_delta_time : number;
+
+    constructor(){
+        this.delta_time = 0.0;
+        this.time = 0.0;
+        this.fixed_time = 0.0;
+
+        this.fixed_delta_time = 0.01 //default: 100 physics update per second
+        this.maximum_delta_time = 0.1 //default
+        this.lastTick = window.performance.now()
+    }
+
+    calculateDelta() : void {
+        let currentTick = window.performance.now();
+        this.cycleTime = currentTick - this.lastTick;
+        this.lastTick = currentTick;
+
+        this.delta_time = this.cycleTime / 1000; //convert to seconds
+        if(this.delta_time > this.maximum_delta_time)
+            this.delta_time = this.maximum_delta_time;
+        
+        this.time += this.delta_time;
+    }
+
+    calculateFixedTime(){
+        this.fixed_time += this.fixed_delta_time;
+    }    
+}
+
+const Time : Time_ = new Time_();
+
+// A game object that goes brrrr....
+//! Q: should Entity bechaviour downloaded from server? Yes. Will it be in WebAssembly?
+interface Entity{
+    id: number //! What type of id?
+    set_position : Point // last known position
+    set_velocity : Point // last known velocity unit/ms??
+
+    position : Point // predicted position 
+    position_error : Point // error calculated on previously fetched data
+    _renderer : HTMLCanvasElement | HTMLImageElement
+    render_size : Point
+
+    // A time-fixed update...
+    //! Oh gosh! the ticks must be synchronized! Or just use 2 different tick system, but that kills tick tracking...
+    //TODO: make that working
+    //! Q: Some entities will have target, and some will just move??
+    tick(): void
+
+    //? I think that I should better name that.. for now applying terminology
+    //NOTE: fixed update is update between ticks.
+    // It shouldn't have any logic, it just should interlope and fix position
+    
+    //No operator overloading :(
+        //! Q: should velocity describe unit/second or unit/tick?
+    fixedUpdate(): void
+
+    //Renders once is nesseacary??? No? Because of animations?
+    //* What about animations?
+    render(): void
+    // This is more difficult.
+    // First, we need to know what game tick data comes from.
+    
+    //! Q: Does the server fires messeages? Or is that more query, response?
+    //! Q: Should game tick, and server tick be the same?
+
+}
+
+class Player implements Entity{
+    // TODO: get better
+    render_size: Point = {x: 48, y: 48};
+    _renderer: HTMLCanvasElement = null;
+    id: number;
+    set_position: Point = new Point(0,0);
+    set_velocity: Point = new Point(0,0);
+    position: Point = new Point(0,0);
+    position_error: Point = new Point(0,0);
+    speed = 5;
+    
+    tick(): void {
+        throw new Error("Method not implemented.");
+        // try get set position
+    }
+    fixedUpdate(): void {
+        this.position.x += this.set_velocity.x * Time.fixed_delta_time;
+        this.position.y += this.set_velocity.y * Time.fixed_delta_time;
+    }
+    render(): void {
+        if (this._renderer === null){
+            this._renderer = document.createElement('canvas');
+            this._renderer.width = ChunksSettings.tile_size;
+            this._renderer.height = ChunksSettings.tile_size;
+        }
+        const context = this._renderer.getContext("2d");
+        context.drawImage(Assets.getImage("player"), 0,0, ChunksSettings.tile_size, ChunksSettings.tile_size);
+    }
+
+}
+
+class Item implements Entity{
+    id: number;
+    set_position: Point;
+    set_velocity: Point;
+    position: Point;
+    position_error: Point;
+    _renderer: HTMLCanvasElement | HTMLImageElement;
+    render_size: Point;
+    image : any;
+    item_type : string;
+
+    constructor(name: string){
+        this.item_type = name
+        this._renderer =  Assets.getImage(name)
+    }
+
+    tick(): void {
+    }
+    fixedUpdate(): void {
+    }
+    render(): void {
+    }
+
+}
+
+class RTCDispatcher{
+    pc : RTCPeerConnection
+    dc : RTCDataChannel
+    world : World
+
+    constructor(world : World){
+        this.world = world
+        this.pc = new RTCPeerConnection({iceServers: [{urls: "stun:stun.l.google.com:19302"}]}) //TODO: add configuration
+        this.dc = this.pc.createDataChannel("my channel");
+        this.dc.addEventListener("message", this.dispatch)
+    }
+
+    connect(){
+        this.pc.createOffer()
+        .then(offer => {
+          this.pc.setLocalDescription(offer)
+
+          return fetch(`http://localhost:10002/game/join`, {
+            method: 'post',
+            headers: {
+              'Accept': 'application/json, text/plain, */*',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(offer)
+          })
+        })
+        .then(res => {console.log(res); return res.json() })
+        .then(res => this.pc.setRemoteDescription(res))
+        .catch(alert)
+    }
+
+    dispatch(event : MessageEvent){
+        // get data, decide what entity it is
+        console.log(event.data)
+
+    }
 
 }
 
 class Game {
     testChunk : Chunk = new Chunk();
     assetLoader : AssetLoader = new AssetLoader();
+    world : World = new World();
+    main_camera : Camera2D = new Camera2D(this.world);
+    player : Player = new Player();
+    
     async start() {
         await Assets.fetch();
         this.init();
 
     }
     init(){
+        let rtc : RTCDispatcher = new RTCDispatcher(this.world);
+        rtc.connect() 
+        this.world.entities["you"] = this.player;
+        this.world.entities["rock"] = new Item("rock");
+        this.world.entities["rock"].position = new Point(2,2)
+        this.player.position = new Point(0,0)
+        Input.bind(Action.MoveUp, InputType.Keyboard, "ArrowUp");
+        Input.bind(Action.MoveDown, InputType.Keyboard, "ArrowDown");
+        Input.bind(Action.MoveLeft, InputType.Keyboard, "ArrowLeft");
+        Input.bind(Action.MoveRight, InputType.Keyboard, "ArrowRight");
+        Input.bind(Action.Useage, InputType.Mouse, MouseButton.Secondary);
 
+        this.world.chunks["0@0"] = this.testChunk;
+        const view = document.getElementById("game_view") as HTMLCanvasElement;
+        const ctx : CanvasRenderingContext2D = view.getContext("2d") as CanvasRenderingContext2D;
+        ctx.filter = "none";
+        this.main_camera.target_renderer = ctx;
+        this.main_camera.set_target(this.player)
         //init game
-        this.testChunk.render();
-        const view = document.getElementById("game_view");
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        //@ts-ignore
-        const ctx : CanvasRenderingContext2D = view.getContext("2d");
-        ctx.drawImage(this.testChunk._renderer,0,0);
 
 
     }
-    tick(tFrame: number){
-        this.testChunk.render();
-        const view = document.getElementById("game_view");
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        //@ts-ignore
-        const ctx : CanvasRenderingContext2D = view.getContext("2d");
-        ctx.drawImage(this.testChunk._renderer,0,0);
-        //Fetch events
-        //Calculate time
+    //! Terminology
+    // Tick: fixed, partial-synchonized update (game logic)
+    // Update: variable, user update (server data, input, render)
+    // FixedUpdate: fixed, non-synchonized kinematics update (move & collision prediction).
+    
+    update(tFrame: number){
 
-        //Input update
+        //Fetch events, and recive data
+        Time.calculateDelta();
 
-        //while (Time.fixedUnscaledTime + Time.fixedUnscaledDeltaTime <= Time.unscaledTime)
-            //Update fixed time
-            //Fixed Update
-
+        while(Time.fixed_time + Time.fixed_delta_time <= Time.time){
+            Time.calculateFixedTime();
+            this.fixedUpdate();
+        }
+        this.player.set_velocity = new Point(0,0);
         //update
+        if(Input.isPressed(Action.MoveLeft)){
+            this.player.set_velocity.x -= 5;
+        }
+        if(Input.isPressed(Action.MoveRight)){
+            this.player.set_velocity.x += 5;
+        }
+        if(Input.isPressed(Action.MoveUp)){
+            this.player.set_velocity.y -= 5;
+        }
+        if(Input.isPressed(Action.MoveDown)){
+            this.player.set_velocity.y += 5;
+        }
+        if(Input.isJustPressed(Action.Useage)){
+            console.log("Selected:")
+            console.log(this.main_camera.screen_to_world_position(Mouse.local_position))
+        }
 
-        // Input.updatePreviousInput();
+        Input.updatePreviousInput();
 
-        //render
+        // update camera position
+        // update scene positions
+
+        // render
+        // swap buffers!!!
+
+        this.main_camera.update();
+        this.main_camera.render();
+    }
+
+
+
+    fixedUpdate(){
+        //* Responsibilities:
+        // Based on entity data predict what will happen next
+        // Fix all errors in position (probabilistics methods???)
+        //? Q: in what order entity should be predicted?
+        for(const key in this.world.entities){
+            this.world.entities[key].fixedUpdate();
+        }
     }
 }
 //Helpers:
@@ -493,7 +973,7 @@ window.onload = async () => {
         tFrame;
         window.requestAnimationFrame(main);
         //add if to end the game loop
-        game.tick(tFrame);
+        game.update(tFrame);
 
         //Render()
         {
@@ -509,7 +989,6 @@ window.onload = async () => {
         }
 
 
-        Input.updatePreviousInput();
     }
 
     main(window.performance.now());

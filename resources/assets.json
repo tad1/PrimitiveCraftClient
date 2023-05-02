@@ -4,5 +4,29 @@
         "url": "resources/tile.png",
         "type": "sprite",
         "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "rock",
+        "url": "resources/rock.png",
+        "type": "sprite",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "stick",
+        "url": "resources/stick.png",
+        "type": "sprite",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "select",
+        "url": "resources/select.png",
+        "type": "sprite",
+        "hash":"randomhash go brrrrr!"
+    },
+    {
+        "id": "player",
+        "url": "resources/player.png",
+        "type": "sprite",
+        "hash": "randomhash go brrrrr!"
     }
 ]

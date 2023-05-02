@@ -4,17 +4,24 @@
     <meta charset="UTF-8" />
     <title>Hello World!</title>
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta
+    <!-- <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'self' blob: data:; script-src 'self'"
     />
     <meta
       http-equiv="X-Content-Security-Policy"
       content="default-src 'self' blob: data:; script-src 'self'"
-    />
+    /> -->
   </head>
+  <style>
+    canvas{
+      width: 1920px;
+      height: 1080px;
+      image-rendering: pixelated;
+    }
+  </style>
   <body>
-    <canvas id="game_view" width="640" height="360"></canvas>
+  <canvas id="game_view" width="1920" height="1080"></canvas><br>
     <!-- You can also require other files to run in this process -->
     <script src="./dist/game.js"></script>
   </body>
