@@ -826,7 +826,7 @@ class RTCDispatcher{
         .then(offer => {
           this.pc.setLocalDescription(offer)
 
-          return fetch(`http://localhost:10002/game/join`, {
+          return fetch(`http://91.236.137.7:1002/game/join`, {
             method: 'post',
             headers: {
               'Accept': 'application/json, text/plain, */*',
