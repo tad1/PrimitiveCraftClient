@@ -13,15 +13,19 @@
       content="default-src 'self' blob: data:; script-src 'self'"
     /> -->
   </head>
+  <script>var exports = {};</script>
   <style>
     canvas{
       width: 1920px;
       height: 1080px;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: -webkit-crisp-edges;
       image-rendering: pixelated;
+      image-rendering: crisp-edges;
     }
   </style>
   <body>
-  <canvas id="game_view" width="1920" height="1080"></canvas><br>
+  <canvas id="game_view" width="1920/4" height="1080/4"></canvas><br>
     <!-- You can also require other files to run in this process -->
     <script src="./dist/game.js"></script>
   </body>
