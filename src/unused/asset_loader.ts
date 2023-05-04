@@ -1,5 +1,5 @@
 //* Not used, left for using indexedDB reference
-class AssetLoader {
+export class AssetLoader {
     db : IDBDatabase
     storeName : string = "assets"
     indexes : Array<string> = []

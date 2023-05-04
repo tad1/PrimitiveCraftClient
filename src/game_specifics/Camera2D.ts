@@ -1,7 +1,7 @@
-import {Entity, Point, Mouse, Assets} from "src/core/core"
+import {Entity, Point, Mouse, Assets} from "../core/core"
 import { Rect } from "./rect";
 import {ChunkCord, Chunk} from "./chunk";
-import { ChunksSettings} from "src/config/config";
+import { ChunksSettings} from "../config/config";
 import { World } from "./World";
 
 

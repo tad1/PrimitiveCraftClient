@@ -1,4 +1,4 @@
-import {Entity, Point, Assets} from "src/core/core"
+import {Entity, Point, Assets} from "../core/core"
 
 export class Item implements Entity{
     id: number;

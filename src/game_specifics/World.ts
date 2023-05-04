@@ -1,5 +1,5 @@
 
-import {Entity} from "src/core/core"
+import {Entity} from "../core/core"
 import { Chunk, Ticket, ChunkCord } from "./chunk";
 
 // A game specific data structure

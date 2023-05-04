@@ -1,6 +1,6 @@
-import {Assets, Point, Time, Input, InputType, MouseButton, Mouse} from "src/core/core"
-import {Item, Player} from "src/entities/entities"
-import {Chunk, Camera2D, World} from "src/game_specifics/game_specifics"
+import {Assets, Point, Time, Input, InputType, MouseButton, Mouse} from "./core/core"
+import {Item, Player} from "./entities/entities"
+import {Chunk, Camera2D, World} from "./game_specifics/game_specifics"
 import { Action } from "./config/config";
 import { RTCDispatcher } from "./RTCDispatcher";
 
@@ -29,7 +29,7 @@ class Game {
         Input.bind(Action.MoveLeft, InputType.Keyboard, "ArrowLeft");
         Input.bind(Action.MoveRight, InputType.Keyboard, "ArrowRight");
         Input.bind(Action.Useage, InputType.Mouse, MouseButton.Secondary);
-
+        throw "error";
         this.world.chunks["0@0"] = this.testChunk;
         const view = document.getElementById("game_view") as HTMLCanvasElement;
         const ctx : CanvasRenderingContext2D = view.getContext("2d") as CanvasRenderingContext2D;

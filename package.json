@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A minimal Electron application written with Typescript",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && webpack --config ./webpack.config.js",
     "watch": "tsc -w",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
     "start": "npm run build && APP_DEV=true electron ./dist/main.js"
