@@ -1,4 +1,4 @@
-import {Point} from "./point";
+import {Point} from "./point.js";
 
 // A global state buffers for input detection.
 export class _Keyboard {

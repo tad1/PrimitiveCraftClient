@@ -1,8 +1,8 @@
-import {Entity, Point, Mouse, Assets} from "src/core/core"
-import { Rect } from "./rect";
-import {ChunkCord, Chunk} from "./chunk";
-import { ChunksSettings} from "src/config/config";
-import { World } from "./World";
+import {Entity, Point, Mouse, Assets} from "../core/core.js"
+import { Rect } from "./rect.js";
+import {ChunkCord, Chunk} from "./chunk.js";
+import { ChunksSettings} from "../config/config.js";
+import { World } from "./World.js";
 
 
 //Camera in 2D world

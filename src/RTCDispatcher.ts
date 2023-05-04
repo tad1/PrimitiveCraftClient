@@ -1,4 +1,4 @@
-import { World } from "./game_specifics/game_specifics";
+import { World } from "./game_specifics/game_specifics.js";
 
 export class RTCDispatcher {
     pc: RTCPeerConnection;

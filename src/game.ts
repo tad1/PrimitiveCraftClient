@@ -1,8 +1,8 @@
-import {Assets, Point, Time, Input, InputType, MouseButton, Mouse} from "src/core/core"
-import {Item, Player} from "src/entities/entities"
-import {Chunk, Camera2D, World} from "src/game_specifics/game_specifics"
-import { Action } from "./config/config";
-import { RTCDispatcher } from "./RTCDispatcher";
+import {Assets, Point, Time, Input, InputType, MouseButton, Mouse} from "./core/core.js"
+import {Item, Player} from "./entities/entities.js"
+import {Chunk, Camera2D, World} from "./game_specifics/game_specifics.js"
+import { Action } from "./config/config.js";
+import { RTCDispatcher } from "./RTCDispatcher.js";
 
 class Game {
     testChunk : Chunk = new Chunk();

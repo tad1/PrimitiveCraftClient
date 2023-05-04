@@ -1,5 +1,5 @@
-import {Entity, Point, Time, Assets} from "src/core/core"
-import { ChunksSettings } from "src/config/config";
+import {Entity, Point, Time, Assets} from "../core/core.js"
+import { ChunksSettings } from "../config/config.js";
 
 export class Player implements Entity{
     // TODO: get better

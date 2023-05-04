@@ -1,6 +1,6 @@
 
-import {Entity} from "src/core/core"
-import { Chunk, Ticket, ChunkCord } from "./chunk";
+import {Entity} from "../core/core.js"
+import { Chunk, Ticket, ChunkCord } from "./chunk.js";
 
 // A game specific data structure
 // ! How it works:

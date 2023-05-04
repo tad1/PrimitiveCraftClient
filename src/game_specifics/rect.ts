@@ -1,4 +1,4 @@
-import {Point} from "src/core/core"
+import {Point} from "../core/core.js"
 
 
 export class Rect{

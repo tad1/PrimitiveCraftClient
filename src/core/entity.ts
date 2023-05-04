@@ -1,4 +1,4 @@
-import {Point} from "./point"
+import {Point} from "./point.js"
 
 // A game object that goes brrrr....
 //! Q: should Entity bechaviour downloaded from server? Yes. Will it be in WebAssembly?
