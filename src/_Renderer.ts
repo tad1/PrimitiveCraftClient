@@ -1,4 +1,4 @@
-export class _Renderer {
+class _Renderer {
     renderers: Array<CanvasRenderingContext2D>;
     canvas: CanvasRenderingContext2D;
 

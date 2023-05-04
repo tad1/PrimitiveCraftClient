@@ -1,4 +1,4 @@
-import { AssetType, Asset } from "../config/config";
+import { AssetType, Asset } from "src/config/config";
 
 class _Assets {
     sprites : Record<string, any> = {};

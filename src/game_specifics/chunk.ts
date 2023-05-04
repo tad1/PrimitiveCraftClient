@@ -1,5 +1,5 @@
-import { Assets } from "../core/assets";
-import { ChunksSettings } from "../config/config";
+import { Assets } from "src/core/assets";
+import { ChunksSettings } from "src/config/config";
 
 export interface ChunkCord{
     x: number //TODO: add integer specifics here!

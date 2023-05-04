@@ -1,4 +1,4 @@
-import {Point} from "../core/core"
+import {Point} from "src/core/core"
 
 
 export class Rect{

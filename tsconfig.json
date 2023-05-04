@@ -2,14 +2,12 @@
   "compilerOptions": {
     // "module": "Node16",
     "target": "ES6",
-    "module": "NodeNext",
     "noImplicitAny": true,
     "sourceMap": true,
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
       "*": ["node_modules/*"],
-      "electron": ["node_modules/electron"],
       "src/*": ["src/*"]
     }
   },
