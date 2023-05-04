@@ -1,2 +1,2 @@
-export * from "./item"
-export * from "./player"
+export * from "./item.js"
+export * from "./player.js"

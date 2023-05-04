@@ -1,6 +1,6 @@
 // Input System, that gives both, low level API, and Action binding abstraction.
-import { Mouse, Keyboard, MouseButton, InputType } from "./input_devices";
-import { _Mouse, _Keyboard } from "./input_devices";
+import { Mouse, Keyboard, MouseButton, InputType } from "./input_devices.js";
+import { _Mouse, _Keyboard } from "./input_devices.js";
 
 
 class _Input {
