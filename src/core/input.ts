@@ -96,6 +96,13 @@ class _Input {
         return !state[value] && previousState[value];
     }
 
+    isJustChanged(action : string|number) : boolean{
+        if( ! (action in this._bindings)) return false;
+        let [type, value] = this._bindings[action]
+        let [state, previousState] = this._get_buffors(type)
+        return state[value] != previousState[value]
+    }
+
 
     _get_buffors(type : InputType) : [Record<string|number, boolean>, Record<string|number, boolean>]{
         switch (type) {
