@@ -5,7 +5,7 @@ import { HandledAction, ServerActionType } from "src/RTCDispatcher";
 export class Player implements Entity{
     events: Array<HandledAction> = [];
     // TODO: get better
-    render_size: Point = {x: 48, y: 48};
+    render_size: Point = {x: 1, y: 1};
     _renderer: HTMLCanvasElement = null;
     id: number;
     set_position: Point = new Point(0,0);

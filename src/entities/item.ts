@@ -8,7 +8,7 @@ export class Item implements Entity{
     position: Point;
     position_error: Point;
     _renderer: HTMLCanvasElement | HTMLImageElement;
-    render_size: Point;
+    render_size: Point = {x: 1, y: 1};;
     image : any;
     item_type : string;
 
