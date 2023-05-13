@@ -119,7 +119,29 @@ export class Camera2D {
         }
     }
 
+    render_tooltip(object : Entity): void{
+        if(object == null) return;
+
+        let position : Point = this.world_to_screen_position(object.position);
+        // todo, dynamic size calculation
+        let size : Point = new Point(100,20);
+
+        // background
+        this.target_renderer.beginPath();
+        this.target_renderer.fillStyle = "#111";
+        this.target_renderer.fillRect(position.x, position.y, size.x, size.y);
+        // text
+        this.target_renderer.fillStyle = '#EEE';
+        position = Point.add(position, new Point(0,10))
+        this.target_renderer.fillText(`id: ${object.id}\n pos:${object.position.x}, ${object.position.y}`, position.x, position.y)
+        this.target_renderer.closePath();
+
+    }
+
     render(): void {
+
+        let selected_entity : Entity = null
+        let mouse_world_pos = this.screen_to_world_position(Mouse.local_position);
 
         //TODO: remove that clear
         this.target_renderer.beginPath();
@@ -136,17 +158,23 @@ export class Camera2D {
             let entity = this.world.entities[key];
             render_hitbox.x = entity.position.x;
             render_hitbox.y = entity.position.y;
-            render_hitbox.w = 1;
-            render_hitbox.h = 1;
+            render_hitbox.w = entity.render_size.x;
+            render_hitbox.h = entity.render_size.y;
 
             if (Rect.intersect(render_hitbox, this._raycast_box)) {
+                if(Rect.point_in(render_hitbox, mouse_world_pos)){
+                    selected_entity = entity;
+                }
+                
                 // ! Assumption: entity position is at render is (x/2, 0) - middle at bottom
                 // TODO: next this thing you need to do
                 //Draw
                 entity.render();
                 let screen_pos = this.world_to_screen_position(entity.position);
-                this.target_renderer.drawImage(entity._renderer, screen_pos.x, screen_pos.y, this.tile_size.x, this.tile_size.y);
+                let render_size = Point.mul(entity.render_size, this.tile_size)
+                this.target_renderer.drawImage(entity._renderer, screen_pos.x, screen_pos.y, render_size.x, render_size.y);
             }
+
         }
 
         // Step 3: HUD, and effects
@@ -154,10 +182,13 @@ export class Camera2D {
         let pos: Point = this.world_to_screen_position(this.screen_to_world_position(Mouse.local_position));
         this.target_renderer.drawImage(Assets.getImage("select"), pos.x, pos.y, this.tile_size.x, this.tile_size.y);
 
-        let world_pos = this.screen_to_world_position(Mouse.local_position);
+        
         this.target_renderer.fillStyle = "#EEE";
-        this.target_renderer.fillText("world pos: x: " + world_pos.x + " y:" + world_pos.y, 0, 10);
+        this.target_renderer.fillText("world pos: x: " + mouse_world_pos.x + " y:" + mouse_world_pos.y, 0, 10);
         this.target_renderer.fillText("Mouse local pos: x: " + Mouse.local_position.x + " y:" + Mouse.local_position.y, 0, 20);
 
+        // Tooltip
+        this.render_tooltip(selected_entity)
+        
     }
 }
