@@ -2,14 +2,15 @@ import {Assets, Point, Time, Input, InputType, MouseButton, Mouse} from "./core/
 import {Item, Player} from "./entities/entities.js"
 import {Chunk, Camera2D, World} from "./game_specifics/game_specifics.js"
 import { Action } from "./config/config.js";
-import { RTCDispatcher } from "./RTCDispatcher.js";
+import { RTCDispatcher, ServerAction, ServerActionType } from "./RTCDispatcher.js";
 
 class Game {
     testChunk : Chunk = new Chunk();
     // assetLoader : AssetLoader = new AssetLoader();
     world : World = new World();
     main_camera : Camera2D = new Camera2D(this.world);
-    player : Player = new Player();
+    player : Player = new Player(); 
+    dispatcher : RTCDispatcher
     
     async start() {
         await Assets.fetch();
@@ -17,9 +18,9 @@ class Game {
 
     }
     init(){
-        let rtc : RTCDispatcher = new RTCDispatcher(this.world);
-        rtc.connect() 
-        this.world.entities["you"] = this.player;
+        this.dispatcher = new RTCDispatcher(this.world);
+        this.dispatcher.connect() 
+        this.world.entities["p+000001"] = this.player;
         this.player.hand = new Item("stick");
         this.world.entities["rock"] = new Item("rock");
         this.world.entities["rock"].position = new Point(2,2)
@@ -46,6 +47,35 @@ class Game {
     // Update: variable, user update (server data, input, render)
     // FixedUpdate: fixed, non-synchonized kinematics update (move & collision prediction).
     
+    handle_movement_input(){
+        let move_vector = new Point(0,0);
+        let speed = this.player.speed;
+        //update
+        if(Input.isPressed(Action.MoveLeft)){
+            move_vector.x -= speed;
+        }
+        if(Input.isPressed(Action.MoveRight)){
+            move_vector.x += speed;
+        }
+        if(Input.isPressed(Action.MoveUp)){
+            move_vector.y -= speed;
+        }
+        if(Input.isPressed(Action.MoveDown)){
+            move_vector.y += speed;
+        }
+        this.player.set_velocity = move_vector;
+
+        // TODO: avoid sending too much zeros!
+        // Send input
+        this.dispatcher.send_player_action(new ServerAction(
+            ServerActionType.Move,
+            0,
+            "",
+            {X: move_vector.x, Y: move_vector.y},
+            0
+        ))
+    }
+
     update(tFrame: number){
 
         //Fetch events, and recive data
@@ -55,20 +85,9 @@ class Game {
             Time.calculateFixedTime();
             this.fixedUpdate();
         }
-        this.player.set_velocity = new Point(0,0);
-        //update
-        if(Input.isPressed(Action.MoveLeft)){
-            this.player.set_velocity.x -= 5;
-        }
-        if(Input.isPressed(Action.MoveRight)){
-            this.player.set_velocity.x += 5;
-        }
-        if(Input.isPressed(Action.MoveUp)){
-            this.player.set_velocity.y -= 5;
-        }
-        if(Input.isPressed(Action.MoveDown)){
-            this.player.set_velocity.y += 5;
-        }
+        this.world.tick();
+
+        this.handle_movement_input();
         if(Input.isJustPressed(Action.Useage)){
             console.log("Selected:")
             console.log(this.main_camera.screen_to_world_position(Mouse.local_position))

@@ -1,4 +1,5 @@
 import {Entity, Point, Assets} from "../core/core.js"
+import { HandledAction } from "../RTCDispatcher.js";
 
 export class Item implements Entity{
     id: number;
@@ -15,6 +16,7 @@ export class Item implements Entity{
         this.item_type = name
         this._renderer =  Assets.getImage(name)
     }
+    events: HandledAction[];
 
     tick(): void {
     }

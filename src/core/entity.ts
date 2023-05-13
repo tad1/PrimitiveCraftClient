@@ -1,3 +1,4 @@
+import { HandledAction } from "src/RTCDispatcher"
 import {Point} from "./point.js"
 
 // A game object that goes brrrr....
@@ -14,6 +15,8 @@ export interface Entity{
 
     _renderer : HTMLCanvasElement | HTMLImageElement
     render_size : Point
+    // TODO: remove coupling, add adapter
+    events: Array<HandledAction>
 
     // A time-fixed update...
     //TODO: make that working

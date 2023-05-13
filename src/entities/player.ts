@@ -1,7 +1,9 @@
 import {Entity, Point, Time, Assets} from "../core/core.js"
 import { ChunksSettings } from "../config/config.js";
+import { HandledAction, ServerActionType } from "src/RTCDispatcher";
 
 export class Player implements Entity{
+    events: Array<HandledAction> = [];
     // TODO: get better
     render_size: Point = {x: 48, y: 48};
     _renderer: HTMLCanvasElement = null;
