@@ -16,6 +16,15 @@ export class Rect{
         )
     }
 
+    static point_in(a : Rect, b : Point) : boolean{
+        return(
+            a.x <= b.x &&
+            a.x + a.w > b.x &&
+            a.y <= b.y &&
+            a.y + a.h > b.y
+        )
+    }
+
     static div(a : Rect, b : number) : Point{
         let res = new Rect();
         res.x = a.x / b
