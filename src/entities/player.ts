@@ -12,17 +12,31 @@ export class Player implements Entity{
     set_velocity: Point = new Point(0,0);
     position: Point = new Point(0,0);
     position_error: Point = new Point(0,0);
-    speed = 5;
+    speed = 1;
 
     hand : Entity
     
     tick(): void {
-        throw new Error("Method not implemented.");
+        
         // try get set position
+        // TODO: just ignore the skipped ticks, only for movement?
+        this.events.forEach(element => {
+            if(element.Action.Action = 8){
+                element.Changes.forEach((change: any) => {
+                    if(change.Property == "position"){
+                        this.set_position.x = change.Value.New.X
+                        this.set_position.y = change.Value.New.Y
+                    }
+                });
+            }
+        });
+
+        this.events = []
     }
     fixedUpdate(): void {
-        this.position.x += this.set_velocity.x * Time.fixed_delta_time;
-        this.position.y += this.set_velocity.y * Time.fixed_delta_time;
+        this.position = this.set_position;
+        // this.position.x += this.set_velocity.x * Time.fixed_delta_time;
+        // this.position.y += this.set_velocity.y * Time.fixed_delta_time;
     }
     render(): void {
         if (this._renderer === null){
