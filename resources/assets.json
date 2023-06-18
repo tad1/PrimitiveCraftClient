@@ -28,5 +28,11 @@
         "url": "resources/player.png",
         "type": "sprite",
         "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "bonk",
+        "url": "resources/bonk.mp3",
+        "type": "audio",
+        "hash": "randomhash go brrrrr!"
     }
 ]

@@ -2,6 +2,7 @@ import { AssetType, Asset } from "../config/config.js";
 
 class _Assets {
     sprites : Record<string, any> = {};
+    audio : Record<string, HTMLAudioElement> = {};
 
     //Errors to handle:
     //  No assets.json
@@ -46,6 +47,11 @@ class _Assets {
             const blob = await response.blob();
             img.src = URL.createObjectURL(blob);
             this.sprites[asset.id] = img
+        } else if(asset.type == AssetType.Audio){
+            let audio = new Audio();
+            const blob = await response.blob();
+            audio.src = URL.createObjectURL(blob);
+            this.audio[asset.id] = audio
         }
     }
 
@@ -71,6 +77,15 @@ class _Assets {
 
     getImage(key : string) {
         return (key in this.sprites) ? this.sprites[key] : null
+    }
+
+    getAudio(key: string) : HTMLAudioElement {
+        return (key in this.audio) ? this.audio[key] : null
+    }
+    playSFX(key: string){
+        if(key in this.audio){
+            (this.audio[key].cloneNode() as HTMLAudioElement).play()
+        }
     }
 
 }

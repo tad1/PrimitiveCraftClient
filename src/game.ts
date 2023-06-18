@@ -15,11 +15,48 @@ class Game {
     async start() {
         await Assets.fetch();
         this.init();
-
     }
+    
     init(){
         this.dispatcher = new RTCDispatcher(this.world);
-        this.dispatcher.connect() 
+        // https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API
+        let login = "test"
+        let secret = "pass"
+        this.dispatcher.connect(login, secret) 
+
+
+        // AUDIO Stuff
+        const audioContext = new AudioContext();
+        const audioElement = document.querySelector("audio");
+        const bonkElement = document.querySelectorAll("audio")[1];
+        // audioElement.onended = ...
+        const track = audioContext.createMediaElementSource(audioElement);
+        const distortion = audioContext.createWaveShaper();
+        const filter = audioContext.createBiquadFilter();
+
+        function makeDistortion(amount : number) {
+            const n_samples = 44100;
+            const curve = new Float32Array(n_samples);
+            const deg = Math.PI / 180;
+
+            for (let i = 0; i < n_samples; i++) {
+                const x = (i * 2) / n_samples - 1;
+                curve[i] = ((3 + amount) * x * 20 * deg) / (Math.PI + amount * Math.abs(x));
+              }
+              return curve;
+        }
+
+        distortion.curve = makeDistortion(100);
+        distortion.oversample = "4x";
+        track.connect(filter).connect(audioContext.destination);
+
+        // filter.type = "highpass"
+        // filter.frequency.setValueAtTime(1000, audioContext.currentTime);
+        // filter.gain.setValueAtTime(25, audioContext.currentTime);
+        audioElement.play();
+
+
+        // TODO: get player entity ID
         this.world.entities["p+000001"] = this.player;
         this.player.hand = new Item("stick");
         this.world.entities["rock"] = new Item("rock");
@@ -91,6 +128,8 @@ class Game {
         if(Input.isJustPressed(Action.Useage)){
             console.log("Selected:")
             console.log(this.main_camera.screen_to_world_position(Mouse.local_position))
+            // * Mind Controll
+            
         }
 
         Input.updatePreviousInput();
@@ -122,7 +161,7 @@ class Game {
 // - [ ] audio
 // - [ ] server
 // - [ ] game state
-// - [ ] render
+// - [X] render
 // - [X] loaders
 
 
