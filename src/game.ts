@@ -1,7 +1,7 @@
 import {Assets, Point, Time, Input, InputType, MouseButton, Mouse} from "./core/core.js"
 import {Item, ItemType, Player} from "./entities/entities.js"
 import {Chunk, Camera2D, World} from "./game_specifics/game_specifics.js"
-import { Action } from "./config/config.js";
+import { Action, ChunksSettings } from "./config/config.js";
 import { RTCDispatcher, ServerAction, ServerActionType } from "./RTCDispatcher.js";
 import { EntityFactory } from "./game_specifics/entity_factory.js";
 
@@ -12,19 +12,22 @@ class Game {
     entity_factory : EntityFactory = new EntityFactory(this.world)
     
     main_camera : Camera2D = new Camera2D(this.world);
-    player : Player = new Player(); 
+    player : Player = new Player(this.world); 
     dispatcher : RTCDispatcher
     playerID : string
-    
-    async start() {
+    logged_in : boolean = false
+
+
+    async start(login: string, secret: string) {
         await Assets.fetch();
-        let login = "test"
-        let secret = "pass"
-        
+        await this.login(login, secret)
+        this.init();
+    }
+
+
+    async login(login: string, secret: string){
         this.dispatcher = new RTCDispatcher(this.world, this.entity_factory);
         this.playerID = await this.dispatcher.connect(login, secret) 
-        
-        this.init();
     }
 
     init(){
@@ -64,15 +67,14 @@ class Game {
 
         // TODO: 
         this.world.entities[this.playerID] = this.player;
-        this.player.hand = new Item(ItemType.Stick);
-        this.world.entities["rock"] = new Item(ItemType.Rock);
-        this.world.entities["rock"].position = new Point(2,2)
         this.player.position = new Point(0,0)
         Input.bind(Action.MoveUp, InputType.Keyboard, "ArrowUp");
         Input.bind(Action.MoveDown, InputType.Keyboard, "ArrowDown");
         Input.bind(Action.MoveLeft, InputType.Keyboard, "ArrowLeft");
         Input.bind(Action.MoveRight, InputType.Keyboard, "ArrowRight");
         Input.bind(Action.Useage, InputType.Mouse, MouseButton.Secondary);
+        Input.bind(Action.Place, InputType.Mouse, MouseButton.Auxiliary);
+        Input.bind(Action.Pickup, InputType.Mouse, MouseButton.Primary);
 
         
         const view = document.getElementById("game_view") as HTMLCanvasElement;
@@ -80,7 +82,7 @@ class Game {
         ctx.imageSmoothingEnabled = false;
         ctx.filter = "none";
         this.main_camera.target_renderer = ctx;
-        this.main_camera.set_target(this.player)
+        this.main_camera.set_targetid(this.playerID)
         //init game
 
 
@@ -92,31 +94,71 @@ class Game {
     
     handle_movement_input(){
         let move_vector = new Point(0,0);
-        let speed = this.player.speed;
+        let speed = 1;
         //update
         if(Input.isPressed(Action.MoveLeft)){
-            move_vector.x -= speed;
+            move_vector.x -= 1;
         }
         if(Input.isPressed(Action.MoveRight)){
-            move_vector.x += speed;
+            move_vector.x += 1;
         }
         if(Input.isPressed(Action.MoveUp)){
-            move_vector.y -= speed;
+            move_vector.y -= 1;
         }
         if(Input.isPressed(Action.MoveDown)){
-            move_vector.y += speed;
+            move_vector.y += 1;
         }
-        this.player.set_velocity = move_vector;
+        if(Input.isJustPressed(Action.Place)){
+            // TODO: determine if place or place at
+            // aka check if there's target or not
+            let camera_pos = this.main_camera.screen_to_world_position(Mouse.position);
+            let pos = Point.mul(camera_pos, ChunksSettings.pos_mul)
+            this.dispatcher.send_player_action(new ServerAction(
+                this.main_camera.selected_entity_id == null ? ServerActionType.Place : ServerActionType.PlaceAt,
+                0,
+                this.main_camera.selected_entity_id,
+                {X: pos.x, Y: pos.y},
+                0
+            ))
+            Assets.playSFX("place")
+        }
+        if (Input.isJustPressed(Action.Pickup)){
+            let camera_pos = this.main_camera.screen_to_world_position(Mouse.position);
+            camera_pos = Point.mul(camera_pos, ChunksSettings.pos_mul)
+            console.log("Entity id:",this.main_camera.selected_entity_id)
+            this.dispatcher.send_player_action(new ServerAction(
+                ServerActionType.Pickup,
+                0,
+                this.main_camera.selected_entity_id,
+                {X: camera_pos.x, Y: camera_pos.y},
+                0
+            ))
+        }
+        if (Input.isJustPressed(Action.Useage)){
+            let camera_pos = this.main_camera.screen_to_world_position(Mouse.position);
+            camera_pos = Point.mul(camera_pos, ChunksSettings.pos_mul)
 
+            this.dispatcher.send_player_action(new ServerAction(
+                ServerActionType.Use,
+                0,
+                this.main_camera.selected_entity_id,
+                {X: camera_pos.x, Y: camera_pos.y},
+                0
+            ))
+        }
+
+        this.player.set_velocity = move_vector;
+        
         // TODO: avoid sending too much zeros!
         // Send input
-        this.dispatcher.send_player_action(new ServerAction(
+        let action = new ServerAction(
             ServerActionType.Move,
             0,
             "",
             {X: move_vector.x, Y: move_vector.y},
             0
-        ))
+        )
+        this.dispatcher.send_player_action(action)
     }
 
     update(tFrame: number){
@@ -164,9 +206,9 @@ class Game {
 }
 //Helpers:
 // - [X] input
-// - [ ] audio
-// - [ ] server
-// - [ ] game state
+// - [x] audio
+// - [x] server
+// - [x] game state
 // - [X] render
 // - [X] loaders
 
@@ -186,9 +228,11 @@ window.onload = async () => {
     });
 }
 
-;(async () => {
-    let game : Game = new Game();
-    await game.start();
+let game : Game = new Game();
+
+function play(login : string, secret : string){
+    ;(async () => {
+    await game.start(login, secret);
     // Main Game Loop
     //* NOTE: when using window.requestAnimationFrame you must specify funciton, not method
     function main(tFrame: number) {
@@ -196,23 +240,11 @@ window.onload = async () => {
         window.requestAnimationFrame(main);
         //add if to end the game loop
         game.update(tFrame);
-
-        //Render()
-        {
-            //map is divided into chunks
-            //when there's update from server only one chunk is redrawed
-            //chunks will be utilized on chunk unload
-            //check if maps needs to be rerendered
-            //render entities
-
-            //canvas can be divided into layers.
-            //and at the end I can use prerendered canvas..
-            //and that's nice I guess!
-        }
-
-
     }
-
+    
     main(window.performance.now());
-})();
+    })();
+}
+
+(window as any).login = play
 

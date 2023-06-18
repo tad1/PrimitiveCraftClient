@@ -26,12 +26,11 @@ export class _Keyboard {
 }
 
 export enum MouseButton{
-    NoButton = 0,
-    Primary = 1,
+    Primary = 0,
     Secondary = 2,
-    Auxiliary = 4,
-    Fourth = 8,
-    Fifth = 16
+    Auxiliary = 1,
+    Fourth = 3,
+    Fifth = 4
 }
 
 export class _Mouse {

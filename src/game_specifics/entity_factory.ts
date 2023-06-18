@@ -2,6 +2,7 @@ import { Item, ItemType } from "../entities/item.js";
 import { Player } from "../entities/player.js";
 import { World } from "./World.js";
 import { Point } from "../core/point.js";
+import { ChunksSettings } from "../config/config.js";
 
 interface Entity{
     EntityId : string
@@ -32,11 +33,33 @@ export class EntityFactory{
         console.log(object)
         if (object.TypeName == "placed_item"){
             // TODO: get name
-            let item = new Item((object as ItemServer).Item.Type)
+            if((object as ItemServer).Item == null)
+                return
+                
+            let item = new Item(this.world,(object as ItemServer).Item.Type)
             item.position = new Point(object.Position.X, object.Position.Y)
+            
+            item.position = Point.div(item.position, new Point(ChunksSettings.tile_subsections, ChunksSettings.tile_subsections))
+            
+            item.position.x = Math.floor(item.position.x);
+            item.position.y = Math.floor(item.position.y);
+            
             this.world.entities[id] = item
         } else if (object.TypeName == "entity_player"){
-            this.world.entities[id] = new Player();
+            let player = new Player(this.world);
+
+            player.set_position = new Point(object.Position.X, object.Position.Y)
+            player.set_position = Point.div(player.set_position, new Point(ChunksSettings.tile_subsections, ChunksSettings.tile_subsections))
+
+            // TODO: remove this hard code
+            if((object as any).Inventory[0].Item != null){
+                let item = new Item(this.world, (object as any).Inventory[0].Item.Type)
+                player.hand = item;
+            }
+            this.world.entities[id] = player;
+
+            console.log(object)
+            // TODO: add item
         }
     }
 }

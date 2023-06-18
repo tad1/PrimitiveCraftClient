@@ -1,5 +1,7 @@
 import { HandledAction } from "src/RTCDispatcher"
 import {Point} from "./point.js"
+import { Change } from "../game_specifics/change.js"
+import { World } from "../game_specifics/World.js"
 
 // A game object that goes brrrr....
 //! Q: should Entity bechaviour downloaded from server? Yes. Will it be in WebAssembly?
@@ -16,7 +18,8 @@ export interface Entity{
     _renderer : HTMLCanvasElement | HTMLImageElement
     render_size : Point
     // TODO: remove coupling, add adapter
-    events: Array<HandledAction>
+    events: Array<Change>
+    world : World
 
     // A time-fixed update...
     //TODO: make that working

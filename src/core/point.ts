@@ -17,5 +17,8 @@ export class Point{
     static div(a : Point, b : Point) : Point{
         return new Point(a.x / b.x, a.y / b.y);
     }
+    static mag(a : Point) : number{
+        return a.x*a.x + a.y*a.y
+    }
 
 }

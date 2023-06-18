@@ -1,9 +1,13 @@
 import {Entity, Point, Time, Assets} from "../core/core.js"
 import { ChunksSettings } from "../config/config.js";
 import { HandledAction, ServerActionType } from "../RTCDispatcher.js";
+import { Change } from "../game_specifics/change.js";
+import { Item } from "./item.js";
+import { World } from "src/game_specifics/World";
 
 export class Player implements Entity{
-    events: Array<HandledAction> = [];
+    world: World;
+    events: Array<Change> = [];
     // TODO: get better
     render_size: Point = {x: 1, y: 1};
     _renderer: HTMLCanvasElement = null;
@@ -12,37 +16,53 @@ export class Player implements Entity{
     set_velocity: Point = new Point(0,0);
     position: Point = new Point(0,0);
     position_error: Point = new Point(0,0);
-    speed = 1;
+    speed = 100/ChunksSettings.tile_subsections;
+    max_error = 1/4
 
-    hand : Entity
+    hand : Item
     
+    constructor(world:World){
+        this.world = world
+    }
 
     tick(): void {
-        
+        // 10ms tick - 1/8
         // try get set position
-        // TODO: just ignore the skipped ticks, only for movement?
-        this.events.forEach(element => {
-            if(element.Action.Action = ServerActionType.Tick && element.Changes != null){
-                element.Changes.forEach((change: any) => {
-                    if(change.Property == "position"){
-                        this.set_position.x = change.Value.New.X
-                        this.set_position.y = change.Value.New.Y
-                        console.log({...change})
-                    } else if(change.Property != "move_vec"){
-                        console.log({...change})
-                    }
-                });
-            } else if (element.Action.Action != ServerActionType.Move){
-                console.log({...element})
+
+        this.events.forEach(change => {
+            if(change.Property == "position"){
+                this.set_position.x = change.Value.New.X / ChunksSettings.tile_subsections
+                this.set_position.y = change.Value.New.Y / ChunksSettings.tile_subsections
+
+                this.position_error = Point.sub(this.set_position, this.position)
+                if( Point.mag(this.position_error) > this.max_error){
+                    console.log("hard set")
+                    this.position = this.set_position;
+                }
+            }
+            if(change.Property == "move_vec"){
+                this.set_velocity.x = change.Value.New.X
+                this.set_velocity.y = change.Value.New.Y
+            }
+            if(change.Property == "item"){
+                if(change.Value.New == null){
+                    this.hand = null
+                }
+                else{
+                    console.log("Picked up item")
+                    this.hand = new Item(this.world,change.Value.New.Type)
+                }
             }
         });
 
         this.events = []
     }
     fixedUpdate(): void {
-        this.position = this.set_position;
-        // this.position.x += this.set_velocity.x * Time.fixed_delta_time;
-        // this.position.y += this.set_velocity.y * Time.fixed_delta_time;
+        this.position.x += this.set_velocity.x * this.speed * Time.fixed_delta_time;
+        this.position.y += this.set_velocity.y * this.speed * Time.fixed_delta_time;
+        // this.position_error = 
+        // this.position = this.set_position;
+
     }
     render(): void {
         if (this._renderer === null){

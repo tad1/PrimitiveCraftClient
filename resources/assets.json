@@ -18,6 +18,12 @@
         "hash": "randomhash go brrrrr!"
     },
     {
+        "id": "item_3",
+        "url": "resources/axe.png",
+        "type": "sprite",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
         "id": "select",
         "url": "resources/select.png",
         "type": "sprite",
@@ -32,6 +38,12 @@
     {
         "id": "bonk",
         "url": "resources/bonk.mp3",
+        "type": "audio",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "place",
+        "url": "resources/place.wav",
         "type": "audio",
         "hash": "randomhash go brrrrr!"
     },

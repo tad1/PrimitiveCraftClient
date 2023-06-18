@@ -1,5 +1,7 @@
+import { Change } from "../game_specifics/change.js";
 import {Entity, Point, Assets} from "../core/core.js"
 import { HandledAction } from "../RTCDispatcher.js";
+import { World } from "../game_specifics/World.js";
 
 export class Item implements Entity{
     id: number;
@@ -12,14 +14,27 @@ export class Item implements Entity{
     image : any;
     item_type : ItemType;
 
-    constructor(type: ItemType){
+    constructor(world: World, type: ItemType){
         this.item_type = type
+        this.world = world
 
         this._renderer =  Assets.getImage(`item_${type}`)
     }
-    events: HandledAction[];
+    world: World;
+    events: Array<Change> = [];
 
     tick(): void {
+        this.events.forEach(change => {
+            if(change.Property == "item"){
+                if(change.Value.New == null){
+                    delete this.world.entities[change.Id]
+                } else {
+                    this.item_type = change.Value.New.Type
+                    this._renderer =  Assets.getImage(`item_${this.item_type}`)
+                }
+            }
+        });
+        this.events = []
     }
     fixedUpdate(): void {
     }

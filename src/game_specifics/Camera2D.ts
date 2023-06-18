@@ -17,6 +17,7 @@ export class Camera2D {
     buffer: any; // stores data that is visible.
     target_renderer: CanvasRenderingContext2D;
     target: Entity = null;
+    target_id: string = null;
 
     selected_entity_id : string = null
 
@@ -39,10 +40,13 @@ export class Camera2D {
     //      Again there's a possible optimalization here
     update() {
         //TODO: update position
-        if (this.target != null) {
+        if (this.target_id != null) {
+            this.target = this.world.entities[this.target_id]
+        }
+        
+        if(this.target != null){
             this.position = this.target.position;
         }
-
         this._raycast_box.x = this.position.x - (this.resolution.x / this.tile_size.x / 2);
         this._raycast_box.y = this.position.y - (this.resolution.y / this.tile_size.y / 2);
         this._raycast_box.w = this.resolution.x / this.tile_size.x;
@@ -51,6 +55,10 @@ export class Camera2D {
 
     set_target(target: Entity) {
         this.target = target;
+    }
+
+    set_targetid(target_id: string) {
+        this.target_id = target_id;
     }
 
     // this, works as intented

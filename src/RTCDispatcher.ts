@@ -1,6 +1,6 @@
 import { Player } from "./entities/player.js";
 import { EntityFactory } from "./game_specifics/entity_factory.js";
-import { Chunk, World } from "./game_specifics/game_specifics.js";
+import { Change, Chunk, UpdateType, World } from "./game_specifics/game_specifics.js";
 
 // TODO: single responsibility
 export class RTCDispatcher {
@@ -13,6 +13,7 @@ export class RTCDispatcher {
 
     world: World;
     entity_factory : EntityFactory
+    chunks_loaded : number = 0
 
     constructor(world: World, entity_factory : EntityFactory) {
         this.world = world;
@@ -84,9 +85,7 @@ export class RTCDispatcher {
         // Load entities
         for (const entityId in data.Entities){
             // TODO: remove responsibility
-            if(!this.world.entities[entityId]){
-                this.entity_factory.create_from_server(entityId, data.Entities[entityId])
-            }
+            this.entity_factory.create_from_server(entityId, data.Entities[entityId])
         }
 
     }
@@ -96,17 +95,28 @@ export class RTCDispatcher {
         const enc = new TextDecoder("utf-8");
         let action : HandledAction = JSON.parse(enc.decode(event.data))
         if (!this.world.entities[action.Source.EntityId]){
-            // There's no such an entity, we need to create one
-            console.log(action)
             // TODO: remove this responsibility
             if(action.Source.TypeName == "entity_player"){
-                this.world.entities[action.Source.EntityId] = new Player()
+                this.world.entities[action.Source.EntityId] = new Player(this.world)
             }
         }
 
-        this.world.entities[action.Source.EntityId].events.push(action)
+        if(action.Changes == null) return;
+        action.Changes.forEach((change : Change) => {
+            if(change.Option == UpdateType.UpdateSet){
+                this.world.entities[change.Id].events.push(change)
+            }
+            else if (change.Option == UpdateType.UpdateDestroy){
+                delete this.world.entities[change.Id]
+            }
+            else if(change.Option == UpdateType.UpdateCreate){
+                // create entity
+                this.entity_factory.create_from_server(change.Id, change.Value.New)
+            }
+        });
 
     }
+
 
 }
 
