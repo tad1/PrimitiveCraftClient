@@ -1,6 +1,6 @@
 import {Entity, Point, Time, Assets} from "../core/core.js"
 import { ChunksSettings } from "../config/config.js";
-import { HandledAction, ServerActionType } from "src/RTCDispatcher";
+import { HandledAction, ServerActionType } from "../RTCDispatcher.js";
 
 export class Player implements Entity{
     events: Array<HandledAction> = [];
@@ -16,18 +16,24 @@ export class Player implements Entity{
 
     hand : Entity
     
+
     tick(): void {
         
         // try get set position
         // TODO: just ignore the skipped ticks, only for movement?
         this.events.forEach(element => {
-            if(element.Action.Action = 8){
+            if(element.Action.Action = ServerActionType.Tick && element.Changes != null){
                 element.Changes.forEach((change: any) => {
                     if(change.Property == "position"){
                         this.set_position.x = change.Value.New.X
                         this.set_position.y = change.Value.New.Y
+                        console.log({...change})
+                    } else if(change.Property != "move_vec"){
+                        console.log({...change})
                     }
                 });
+            } else if (element.Action.Action != ServerActionType.Move){
+                console.log({...element})
             }
         });
 

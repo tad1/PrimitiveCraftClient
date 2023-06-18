@@ -18,6 +18,7 @@ export class Camera2D {
     target_renderer: CanvasRenderingContext2D;
     target: Entity = null;
 
+    selected_entity_id : string = null
 
     constructor(world: World) {
         this.position = { x: 0, y: 0 };
@@ -119,8 +120,10 @@ export class Camera2D {
         }
     }
 
-    render_tooltip(object : Entity): void{
-        if(object == null) return;
+    render_tooltip(object_id : string): void{
+        if(object_id == null) return;
+
+        let object = this.world.entities[object_id]
 
         let position : Point = this.world_to_screen_position(object.position);
         // todo, dynamic size calculation
@@ -133,14 +136,14 @@ export class Camera2D {
         // text
         this.target_renderer.fillStyle = '#EEE';
         position = Point.add(position, new Point(0,10))
-        this.target_renderer.fillText(`id: ${object.id}\n pos:${object.position.x}, ${object.position.y}`, position.x, position.y)
+        this.target_renderer.fillText(`id: ${object_id}\n pos:${object.position.x}, ${object.position.y}`, position.x, position.y)
         this.target_renderer.closePath();
 
     }
 
     render(): void {
 
-        let selected_entity : Entity = null
+        this.selected_entity_id = null
         let mouse_world_pos = this.screen_to_world_position(Mouse.local_position);
 
         //TODO: remove that clear
@@ -163,7 +166,7 @@ export class Camera2D {
 
             if (Rect.intersect(render_hitbox, this._raycast_box)) {
                 if(Rect.point_in(render_hitbox, mouse_world_pos)){
-                    selected_entity = entity;
+                    this.selected_entity_id = key;
                 }
                 
                 // ! Assumption: entity position is at render is (x/2, 0) - middle at bottom
@@ -188,7 +191,7 @@ export class Camera2D {
         this.target_renderer.fillText("Mouse local pos: x: " + Mouse.local_position.x + " y:" + Mouse.local_position.y, 0, 20);
 
         // Tooltip
-        this.render_tooltip(selected_entity)
+        this.render_tooltip(this.selected_entity_id)
         
     }
 }

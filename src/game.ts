@@ -1,34 +1,40 @@
 import {Assets, Point, Time, Input, InputType, MouseButton, Mouse} from "./core/core.js"
-import {Item, Player} from "./entities/entities.js"
+import {Item, ItemType, Player} from "./entities/entities.js"
 import {Chunk, Camera2D, World} from "./game_specifics/game_specifics.js"
 import { Action } from "./config/config.js";
 import { RTCDispatcher, ServerAction, ServerActionType } from "./RTCDispatcher.js";
+import { EntityFactory } from "./game_specifics/entity_factory.js";
 
 class Game {
     testChunk : Chunk = new Chunk();
     // assetLoader : AssetLoader = new AssetLoader();
     world : World = new World();
+    entity_factory : EntityFactory = new EntityFactory(this.world)
+    
     main_camera : Camera2D = new Camera2D(this.world);
     player : Player = new Player(); 
     dispatcher : RTCDispatcher
+    playerID : string
     
     async start() {
         await Assets.fetch();
-        this.init();
-    }
-    
-    init(){
-        this.dispatcher = new RTCDispatcher(this.world);
-        // https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API
         let login = "test"
         let secret = "pass"
-        this.dispatcher.connect(login, secret) 
+        
+        this.dispatcher = new RTCDispatcher(this.world, this.entity_factory);
+        this.playerID = await this.dispatcher.connect(login, secret) 
+        
+        this.init();
+    }
 
+    init(){
+        // https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API
+
+        console.log("Player id is:", this.playerID)
 
         // AUDIO Stuff
         const audioContext = new AudioContext();
-        const audioElement = document.querySelector("audio");
-        const bonkElement = document.querySelectorAll("audio")[1];
+        const audioElement = Assets.getAudio("music");
         // audioElement.onended = ...
         const track = audioContext.createMediaElementSource(audioElement);
         const distortion = audioContext.createWaveShaper();
@@ -56,10 +62,10 @@ class Game {
         audioElement.play();
 
 
-        // TODO: get player entity ID
-        this.world.entities["p+000001"] = this.player;
-        this.player.hand = new Item("stick");
-        this.world.entities["rock"] = new Item("rock");
+        // TODO: 
+        this.world.entities[this.playerID] = this.player;
+        this.player.hand = new Item(ItemType.Stick);
+        this.world.entities["rock"] = new Item(ItemType.Rock);
         this.world.entities["rock"].position = new Point(2,2)
         this.player.position = new Point(0,0)
         Input.bind(Action.MoveUp, InputType.Keyboard, "ArrowUp");
@@ -68,7 +74,7 @@ class Game {
         Input.bind(Action.MoveRight, InputType.Keyboard, "ArrowRight");
         Input.bind(Action.Useage, InputType.Mouse, MouseButton.Secondary);
 
-        this.world.chunks["0@0"] = this.testChunk;
+        
         const view = document.getElementById("game_view") as HTMLCanvasElement;
         const ctx : CanvasRenderingContext2D = view.getContext("2d") as CanvasRenderingContext2D;
         ctx.imageSmoothingEnabled = false;

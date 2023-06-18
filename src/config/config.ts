@@ -19,10 +19,11 @@ export interface Asset {
 
 export enum AssetType {
     Sprite = "sprite",
+    Audio = "audio"
 }
 
 export const ChunksSettings = {
-    chunk_size : 8,
+    chunk_size : 256/8, //32
     tile_size: 16,
     render_distance: 3 
 }

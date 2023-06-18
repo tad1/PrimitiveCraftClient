@@ -6,13 +6,13 @@
         "hash": "randomhash go brrrrr!"
     },
     {
-        "id": "rock",
+        "id": "item_1",
         "url": "resources/rock.png",
         "type": "sprite",
         "hash": "randomhash go brrrrr!"
     },
     {
-        "id": "stick",
+        "id": "item_2",
         "url": "resources/stick.png",
         "type": "sprite",
         "hash": "randomhash go brrrrr!"
@@ -32,6 +32,12 @@
     {
         "id": "bonk",
         "url": "resources/bonk.mp3",
+        "type": "audio",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "music",
+        "url": "resources/EnDXGQmCz3U.mp3",
         "type": "audio",
         "hash": "randomhash go brrrrr!"
     }

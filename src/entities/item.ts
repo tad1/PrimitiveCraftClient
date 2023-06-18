@@ -10,11 +10,12 @@ export class Item implements Entity{
     _renderer: HTMLCanvasElement | HTMLImageElement;
     render_size: Point = {x: 1, y: 1};;
     image : any;
-    item_type : string;
+    item_type : ItemType;
 
-    constructor(name: string){
-        this.item_type = name
-        this._renderer =  Assets.getImage(name)
+    constructor(type: ItemType){
+        this.item_type = type
+
+        this._renderer =  Assets.getImage(`item_${type}`)
     }
     events: HandledAction[];
 
@@ -25,4 +26,11 @@ export class Item implements Entity{
     render(): void {
     }
 
+}
+
+export enum ItemType {
+	_ = 0, // skip 0 for bug catching
+	Rock,
+	Stick,
+	Axe
 }
