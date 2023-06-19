@@ -65,16 +65,19 @@ var Game = /** @class */ (function () {
             });
         });
     };
-    Game.prototype.login = function (login, secret) {
+    Game.prototype.login = function (login, secret, server) {
+        if (server === void 0) { server = "localhost:10002"; }
         return __awaiter(this, void 0, void 0, function () {
             var _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
+                        this.world.entities = {};
+                        this.world.chunks = {};
                         this.player = null;
                         this.dispatcher = new RTCDispatcher(this.world, this.entity_factory);
                         _a = this;
-                        return [4 /*yield*/, this.dispatcher.connect(login, secret)];
+                        return [4 /*yield*/, this.dispatcher.connect(login, secret, server)];
                     case 1:
                         _a.playerID = _b.sent();
                         this.logged_in = true;

@@ -69,7 +69,8 @@ var RTCDispatcher = /** @class */ (function () {
             this.player_actions.send(JSON.stringify(action));
         }
     };
-    RTCDispatcher.prototype.connect = function (login, secret) {
+    RTCDispatcher.prototype.connect = function (login, secret, server) {
+        if (server === void 0) { server = "localhost:10002"; }
         return __awaiter(this, void 0, void 0, function () {
             var playerId;
             var _this = this;
@@ -80,7 +81,7 @@ var RTCDispatcher = /** @class */ (function () {
                         return [4 /*yield*/, this.pc.createOffer()
                                 .then(function (offer) {
                                 _this.pc.setLocalDescription(offer);
-                                return fetch("http://localhost:10002/game/join", {
+                                return fetch("http://".concat(server, "/game/join"), {
                                     method: 'post',
                                     headers: {
                                         'Accept': 'application/json, text/plain, */*',

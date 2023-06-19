@@ -45,13 +45,13 @@ export class RTCDispatcher {
     }
 
 
-    async connect(login : string, secret: string) : Promise<string> {
+    async connect(login : string, secret: string, server: string = "localhost:10002") : Promise<string> {
         let playerId : string = null
         await this.pc.createOffer()
             .then(offer => {
                 this.pc.setLocalDescription(offer);
 
-                return fetch(`http://localhost:10002/game/join`, {
+                return fetch(`http://${server}/game/join`, {
                     method: 'post',
                     headers: {
                         'Accept': 'application/json, text/plain, */*',

@@ -25,10 +25,13 @@ class Game {
     }
 
 
-    async login(login: string, secret: string){
+    async login(login: string, secret: string, server: string = "localhost:10002"){
+        this.world.entities = {}
+        this.world.chunks = {}
+
         this.player = null
         this.dispatcher = new RTCDispatcher(this.world, this.entity_factory);
-        this.playerID = await this.dispatcher.connect(login, secret) 
+        this.playerID = await this.dispatcher.connect(login, secret, server) 
         this.logged_in = true
         console.log("Player id is:", this.playerID)
         this.main_camera.set_targetid(this.playerID)
