@@ -88,34 +88,17 @@ var Game = /** @class */ (function () {
     Game.prototype.splash_screen = function () {
         var s = 4;
         this.main_camera.target_renderer.drawImage(Assets.getImage("logo"), 400, 100 + Math.sin(Time.time) * 10, 360 * s, 128 * s);
-        this.main_camera.target_renderer.drawImage(Assets.getImage("logo2"), 400, 100 + Math.sin(Time.time + 0.3) * 10, 360 * s, 128 * s);
+        this.main_camera.target_renderer.drawImage(Assets.getImage("logo2"), 400, 100 + Math.sin(Time.time + 0.6) * 10, 360 * s, 128 * s);
     };
     Game.prototype.init = function () {
         // https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API
-        // // AUDIO Stuff
-        // const audioContext = new AudioContext();
-        // const audioElement = Assets.getAudio("music");
-        // // audioElement.onended = ...
-        // const track = audioContext.createMediaElementSource(audioElement);
-        // const distortion = audioContext.createWaveShaper();
-        // const filter = audioContext.createBiquadFilter();
-        // function makeDistortion(amount : number) {
-        //     const n_samples = 44100;
-        //     const curve = new Float32Array(n_samples);
-        //     const deg = Math.PI / 180;
-        //     for (let i = 0; i < n_samples; i++) {
-        //         const x = (i * 2) / n_samples - 1;
-        //         curve[i] = ((3 + amount) * x * 20 * deg) / (Math.PI + amount * Math.abs(x));
-        //       }
-        //       return curve;
-        // }
-        // distortion.curve = makeDistortion(100);
-        // distortion.oversample = "4x";
-        // track.connect(filter).connect(audioContext.destination);
-        // // filter.type = "highpass"
-        // // filter.frequency.setValueAtTime(1000, audioContext.currentTime);
-        // // filter.gain.setValueAtTime(25, audioContext.currentTime);
-        // audioElement.play();
+        // AUDIO Stuff
+        var audioContext = new AudioContext();
+        var audioElement = Assets.getAudio("music");
+        // audioElement.onended = ...
+        var track = audioContext.createMediaElementSource(audioElement);
+        track.connect(audioContext.destination);
+        audioElement.play();
         // TODO: 
         this.world.entities[this.playerID] = this.player;
         Input.bind(Action.MoveUp, InputType.Keyboard, "ArrowUp");
