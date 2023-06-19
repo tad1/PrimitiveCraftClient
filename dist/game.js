@@ -156,9 +156,15 @@ var Game = /** @class */ (function () {
             this.dispatcher.send_player_action(new ServerAction(ServerActionType.Pickup, 0, this.main_camera.selected_entity_id, { X: camera_pos.x, Y: camera_pos.y }, 0));
         }
         if (Input.isJustPressed(Action.Useage)) {
+            var action_1 = ServerActionType.Use;
+            if (this.world.entities[this.playerID]) {
+                if (this.world.entities[this.playerID].hand == null) {
+                    action_1 = ServerActionType.Pickup;
+                }
+            }
             var camera_pos = this.main_camera.screen_to_world_position(Mouse.position);
             camera_pos = Point.mul(camera_pos, ChunksSettings.pos_mul);
-            this.dispatcher.send_player_action(new ServerAction(ServerActionType.Use, 0, this.main_camera.selected_entity_id, { X: camera_pos.x, Y: camera_pos.y }, 0));
+            this.dispatcher.send_player_action(new ServerAction(action_1, 0, this.main_camera.selected_entity_id, { X: camera_pos.x, Y: camera_pos.y }, 0));
         }
         if (Input.isJustPressed(Action.Attack)) {
             var camera_pos = this.main_camera.screen_to_world_position(Mouse.position);

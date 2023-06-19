@@ -128,11 +128,17 @@ class Game {
             ))
         }
         if (Input.isJustPressed(Action.Useage)){
+            let action : ServerActionType = ServerActionType.Use;
+            if(this.world.entities[this.playerID]){
+                if((this.world.entities[this.playerID] as Player).hand == null){
+                    action = ServerActionType.Pickup;
+                }
+            }
             let camera_pos = this.main_camera.screen_to_world_position(Mouse.position);
             camera_pos = Point.mul(camera_pos, ChunksSettings.pos_mul)
 
             this.dispatcher.send_player_action(new ServerAction(
-                ServerActionType.Use,
+                action,
                 0,
                 this.main_camera.selected_entity_id,
                 {X: camera_pos.x, Y: camera_pos.y},
