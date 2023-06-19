@@ -18,63 +18,73 @@ class Game {
     logged_in : boolean = false
 
 
-    async start(login: string, secret: string) {
+    async start() {
+        (window as any).login = this.login.bind(this)
         await Assets.fetch();
-        await this.login(login, secret)
         this.init();
     }
 
 
     async login(login: string, secret: string){
+        this.player = null
         this.dispatcher = new RTCDispatcher(this.world, this.entity_factory);
         this.playerID = await this.dispatcher.connect(login, secret) 
+        this.logged_in = true
+        console.log("Player id is:", this.playerID)
+        this.main_camera.set_targetid(this.playerID)
+
+    }
+
+    splash_screen(){
+        let s = 4;
+        this.main_camera.target_renderer.drawImage(Assets.getImage("logo"), 400,100 + Math.sin(Time.time) * 10, 360*s, 128*s);        
+        this.main_camera.target_renderer.drawImage(Assets.getImage("logo2"), 400,100 + Math.sin(Time.time + 0.3) * 10, 360*s, 128*s);        
     }
 
     init(){
         // https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API
 
-        console.log("Player id is:", this.playerID)
 
-        // AUDIO Stuff
-        const audioContext = new AudioContext();
-        const audioElement = Assets.getAudio("music");
-        // audioElement.onended = ...
-        const track = audioContext.createMediaElementSource(audioElement);
-        const distortion = audioContext.createWaveShaper();
-        const filter = audioContext.createBiquadFilter();
+        // // AUDIO Stuff
+        // const audioContext = new AudioContext();
+        // const audioElement = Assets.getAudio("music");
+        // // audioElement.onended = ...
+        // const track = audioContext.createMediaElementSource(audioElement);
+        // const distortion = audioContext.createWaveShaper();
+        // const filter = audioContext.createBiquadFilter();
 
-        function makeDistortion(amount : number) {
-            const n_samples = 44100;
-            const curve = new Float32Array(n_samples);
-            const deg = Math.PI / 180;
+        // function makeDistortion(amount : number) {
+        //     const n_samples = 44100;
+        //     const curve = new Float32Array(n_samples);
+        //     const deg = Math.PI / 180;
 
-            for (let i = 0; i < n_samples; i++) {
-                const x = (i * 2) / n_samples - 1;
-                curve[i] = ((3 + amount) * x * 20 * deg) / (Math.PI + amount * Math.abs(x));
-              }
-              return curve;
-        }
+        //     for (let i = 0; i < n_samples; i++) {
+        //         const x = (i * 2) / n_samples - 1;
+        //         curve[i] = ((3 + amount) * x * 20 * deg) / (Math.PI + amount * Math.abs(x));
+        //       }
+        //       return curve;
+        // }
 
-        distortion.curve = makeDistortion(100);
-        distortion.oversample = "4x";
-        track.connect(filter).connect(audioContext.destination);
+        // distortion.curve = makeDistortion(100);
+        // distortion.oversample = "4x";
+        // track.connect(filter).connect(audioContext.destination);
 
-        // filter.type = "highpass"
-        // filter.frequency.setValueAtTime(1000, audioContext.currentTime);
-        // filter.gain.setValueAtTime(25, audioContext.currentTime);
-        audioElement.play();
+        // // filter.type = "highpass"
+        // // filter.frequency.setValueAtTime(1000, audioContext.currentTime);
+        // // filter.gain.setValueAtTime(25, audioContext.currentTime);
+        // audioElement.play();
 
 
         // TODO: 
         this.world.entities[this.playerID] = this.player;
-        this.player.position = new Point(0,0)
         Input.bind(Action.MoveUp, InputType.Keyboard, "ArrowUp");
         Input.bind(Action.MoveDown, InputType.Keyboard, "ArrowDown");
         Input.bind(Action.MoveLeft, InputType.Keyboard, "ArrowLeft");
         Input.bind(Action.MoveRight, InputType.Keyboard, "ArrowRight");
         Input.bind(Action.Useage, InputType.Mouse, MouseButton.Secondary);
         Input.bind(Action.Place, InputType.Mouse, MouseButton.Auxiliary);
-        Input.bind(Action.Pickup, InputType.Mouse, MouseButton.Primary);
+        Input.bind(Action.Attack, InputType.Mouse, MouseButton.Primary);
+        Input.bind(Action.Pickup, InputType.Mouse, MouseButton.Fifth);
 
         
         const view = document.getElementById("game_view") as HTMLCanvasElement;
@@ -82,7 +92,6 @@ class Game {
         ctx.imageSmoothingEnabled = false;
         ctx.filter = "none";
         this.main_camera.target_renderer = ctx;
-        this.main_camera.set_targetid(this.playerID)
         //init game
 
 
@@ -93,6 +102,8 @@ class Game {
     // FixedUpdate: fixed, non-synchonized kinematics update (move & collision prediction).
     
     handle_movement_input(){
+        if(!this.logged_in) return
+        
         let move_vector = new Point(0,0);
         let speed = 1;
         //update
@@ -146,8 +157,21 @@ class Game {
                 0
             ))
         }
+        if (Input.isJustPressed(Action.Attack)){
+            let camera_pos = this.main_camera.screen_to_world_position(Mouse.position);
+            camera_pos = Point.mul(camera_pos, ChunksSettings.pos_mul)
 
-        this.player.set_velocity = move_vector;
+            this.dispatcher.send_player_action(new ServerAction(
+                ServerActionType.Attack,
+                0,
+                this.main_camera.selected_entity_id,
+                {X: camera_pos.x, Y: camera_pos.y},
+                0
+            ))
+        }
+
+        if(this.world.entities[this.playerID])
+            this.world.entities[this.playerID].set_velocity = move_vector;
         
         // TODO: avoid sending too much zeros!
         // Send input
@@ -190,6 +214,10 @@ class Game {
 
         this.main_camera.update();
         this.main_camera.render();
+        if(!this.logged_in){
+            this.splash_screen();
+        }
+
     }
 
 
@@ -230,21 +258,17 @@ window.onload = async () => {
 
 let game : Game = new Game();
 
-function play(login : string, secret : string){
-    ;(async () => {
-    await game.start(login, secret);
-    // Main Game Loop
-    //* NOTE: when using window.requestAnimationFrame you must specify funciton, not method
-    function main(tFrame: number) {
-        tFrame;
-        window.requestAnimationFrame(main);
-        //add if to end the game loop
-        game.update(tFrame);
-    }
-    
-    main(window.performance.now());
-    })();
+;(async () => {
+await game.start();
+// Main Game Loop
+//* NOTE: when using window.requestAnimationFrame you must specify funciton, not method
+function main(tFrame: number) {
+    tFrame;
+    window.requestAnimationFrame(main);
+    //add if to end the game loop
+    game.update(tFrame);
 }
 
-(window as any).login = play
+main(window.performance.now());
+})();
 

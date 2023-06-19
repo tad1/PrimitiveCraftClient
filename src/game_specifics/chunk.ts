@@ -31,8 +31,9 @@ export class Chunk{
         const context = this._renderer.getContext("2d");
         for (let i = 0; i < ChunksSettings.chunk_size; i++) {
             for (let ii = 0; ii < ChunksSettings.chunk_size; ii++) {
+
                 //TODO: get cell and render
-                context.drawImage(Assets.getImage("tmp"), ii * ChunksSettings.tile_size, i*ChunksSettings.tile_size);
+                context.drawImage(Assets.getImage(`grass_${(i*ii + i)%3}`), ii * ChunksSettings.tile_size, i*ChunksSettings.tile_size);
             }
         }
         //Renders chunk to it's renderer

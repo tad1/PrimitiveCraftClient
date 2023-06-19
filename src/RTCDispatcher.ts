@@ -75,7 +75,6 @@ export class RTCDispatcher {
     dispatch(event : MessageEvent){
         const enc = new TextDecoder("utf-8");
         let data = JSON.parse(enc.decode(event.data));
-        console.log(data);
         let pos = `${data.Id.X}@${data.Id.Y}`
         // check if there's chunk
         if (!this.world.chunks[pos]){

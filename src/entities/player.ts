@@ -17,7 +17,7 @@ export class Player implements Entity{
     position: Point = new Point(0,0);
     position_error: Point = new Point(0,0);
     speed = 100/ChunksSettings.tile_subsections;
-    max_error = 1/4
+    max_error = 1/2
 
     hand : Item
     
@@ -31,12 +31,13 @@ export class Player implements Entity{
 
         this.events.forEach(change => {
             if(change.Property == "position"){
+                console.log(change.Value.New)
                 this.set_position.x = change.Value.New.X / ChunksSettings.tile_subsections
                 this.set_position.y = change.Value.New.Y / ChunksSettings.tile_subsections
 
                 this.position_error = Point.sub(this.set_position, this.position)
                 if( Point.mag(this.position_error) > this.max_error){
-                    console.log("hard set")
+                    // Assets.playSFX("bonk")
                     this.position = this.set_position;
                 }
             }

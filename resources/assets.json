@@ -24,6 +24,72 @@
         "hash": "randomhash go brrrrr!"
     },
     {
+        "id": "grass_0",
+        "url": "resources/grass.png",
+        "type": "sprite",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "grass_1",
+        "url": "resources/grass2.png",
+        "type": "sprite",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "grass_2",
+        "url": "resources/grass3.png",
+        "type": "sprite",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "item_4",
+        "url": "resources/wood.png",
+        "type": "sprite",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "item_5",
+        "url": "resources/woodplank.png",
+        "type": "sprite",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "node_4_3",
+        "url": "resources/node_4_3.png",
+        "type": "sprite",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "node_4_2",
+        "url": "resources/node_4_2.png",
+        "type": "sprite",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "node_4_1",
+        "url": "resources/node_4_1.png",
+        "type": "sprite",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "node_4_0",
+        "url": "resources/node_4_0.png",
+        "type": "sprite",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "logo",
+        "url": "resources/temp_logo.png",
+        "type": "sprite",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
+        "id": "logo2",
+        "url": "resources/temp_logo2.png",
+        "type": "sprite",
+        "hash": "randomhash go brrrrr!"
+    },
+    {
         "id": "select",
         "url": "resources/select.png",
         "type": "sprite",
